@@ -8,7 +8,7 @@ local Window = Rayfield:CreateWindow({
    ShowText = "G&B", -- for mobile users to unhide rayfield, change if you'd like
    Theme = "Amethyst", -- Check https://docs.sirius.menu/rayfield/configuration/themes
 
-   ToggleUIKeybind = "B", -- The keybind to toggle the UI visibility (string like "K" or Enum.KeyCode)
+   ToggleUIKeybind = "X", -- The keybind to toggle the UI visibility (string like "K" or Enum.KeyCode)
 
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
@@ -1307,4 +1307,5 @@ end
 -- Return cleanup if you want to expose it (not required)
 return {
     cleanup = cleanupAimbot
+
 }
