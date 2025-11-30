@@ -1,0 +1,191 @@
+local Button = Main:CreateButton({
+   Name = "Zac Kill Aura & ESP",
+   Callback = function()
+
+      local player = game:GetService("Players").LocalPlayer
+      local RunService = game:GetService("RunService")
+
+      if _G.ZacCombatRunning then
+         warn("[BluuGui] Zac Kill Aura already active!")
+         return
+      end
+      _G.ZacCombatRunning = true
+
+      -- ⚙ Settings
+      local LAG_LEVEL = 9.5     -- Higher = slower = less lag
+      local ATTACK_COOLDOWN = 1 -- seconds between attacks
+      local ZOMBIE_TYPES = {"Agent", "Slim"}
+      local currentMode = 2     -- 1: Stop | 2: Normal | 3: Clear Zombie
+      local highlightEnabled = false
+      local lastAttackTime = 0
+
+      local waitDelay = math.clamp(LAG_LEVEL * 0.4, 0, 1.5)
+
+      -- 📊 Create mini control UI
+      local gui = Instance.new("ScreenGui", player.PlayerGui)
+      gui.Name = "ZacCombatUI"
+      gui.ResetOnSpawn = false
+
+      local frame = Instance.new("Frame", gui)
+      frame.Size = UDim2.new(0, 260, 0, 100)
+      frame.Position = UDim2.new(0.5, -130, 0, 10)
+      frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+      frame.BackgroundTransparency = 0.2
+      frame.BorderSizePixel = 0
+      frame.Active = true
+      frame.Draggable = true
+
+      local label1 = Instance.new("TextLabel", frame)
+      label1.Text = "⚔ AUTO ATTACK: ENABLED"
+      label1.Size = UDim2.new(1, 0, 0.4, 0)
+      label1.TextColor3 = Color3.fromRGB(0, 255, 0)
+      label1.BackgroundTransparency = 1
+      label1.Font = Enum.Font.GothamBold
+      label1.TextSize = 14
+
+      local label2 = Instance.new("TextLabel", frame)
+      label2.Text = "🔍 ZOMBIE HIGHLIGHT: ENABLED"
+      label2.Size = UDim2.new(1, 0, 0.4, 0)
+      label2.Position = UDim2.new(0, 0, 0.4, 0)
+      label2.TextColor3 = Color3.fromRGB(0, 200, 255)
+      label2.BackgroundTransparency = 1
+      label2.Font = Enum.Font.GothamBold
+      label2.TextSize = 14
+
+      local modeBtn = Instance.new("TextButton", frame)
+      modeBtn.Size = UDim2.new(0.9, 0, 0.3, 0)
+      modeBtn.Position = UDim2.new(0.05, 0, 0.75, 0)
+      modeBtn.Font = Enum.Font.GothamBold
+      modeBtn.TextSize = 14
+      modeBtn.TextColor3 = Color3.new(1, 1, 1)
+
+      local function updateMode()
+         local colors = {
+            [1] = Color3.fromRGB(180, 40, 40),
+            [2] = Color3.fromRGB(40, 180, 40),
+            [3] = Color3.fromRGB(180, 180, 40)
+         }
+         local names = {"Stop", "Normal", "Clear Zombie"}
+         modeBtn.Text = "Mode: " .. names[currentMode]
+         modeBtn.BackgroundColor3 = colors[currentMode]
+      end
+      updateMode()
+
+      modeBtn.MouseButton1Click:Connect(function()
+         currentMode = currentMode % 3 + 1
+         updateMode()
+         game.StarterGui:SetCore("SendNotification", {
+            Title = "Mode Changed",
+            Text = modeBtn.Text,
+            Duration = 3
+         })
+      end)
+
+      -- 🧟‍♂️ Auto Attack logic
+      local function attack()
+         if currentMode == 1 then return end
+         local now = os.clock()
+         if now - lastAttackTime < ATTACK_COOLDOWN then return end
+
+         local char = player.Character
+         local root = char and char:FindFirstChild("HumanoidRootPart")
+         if not root then return end
+
+         local tool = char:FindFirstChildWhichIsA("Tool")
+         local event = tool and (tool:FindFirstChildWhichIsA("RemoteEvent") or tool:FindFirstChild("MeleeBase") and tool.MeleeBase:FindFirstChildWhichIsA("RemoteEvent"))
+         if not event then return end
+
+         for _, obj in ipairs(workspace:GetDescendants()) do
+            for _, typeName in ipairs(ZOMBIE_TYPES) do
+               if obj.Name == typeName and obj:FindFirstChild("Head") then
+                  local head = obj.Head
+                  local hum = obj:FindFirstChildOfClass("Humanoid")
+                  if hum and hum.Health > 0 and (head.Position - root.Position).Magnitude <= 19 then
+                     local pos = head.Position
+                     local dir = (pos - root.Position).Unit
+                     local knock = dir * 15
+
+                     event:FireServer("Swing", "Thrust")
+                     event:FireServer("HitZombie", obj, pos, true, knock, "Head", Vector3.new(math.random(), math.random(), math.random()).Unit)
+
+                     if currentMode == 3 then
+                        for i = 1, 4 do
+                           task.wait(0.05)
+                           event:FireServer("Swing", "Thrust")
+                           event:FireServer("HitZombie", obj, pos + Vector3.new(0, 0.2 * i, 0), true, knock * (1 + i * 0.1), "Head", Vector3.new(math.random(), math.random(), math.random()).Unit)
+                        end
+                     end
+                  end
+               end
+            end
+         end
+
+         lastAttackTime = now
+      end
+
+      -- 🔦 Highlight ESP
+      local cameraFolder = workspace:WaitForChild("Camera")
+      local colors = {
+         Torch = Color3.fromRGB(100, 255, 100),
+         Axe = Color3.fromRGB(255, 100, 100),
+         Default = Color3.fromRGB(240, 240, 240)
+      }
+
+      local function highlightModel(model)
+         if not model.PrimaryPart then
+            model.PrimaryPart = model:FindFirstChildWhichIsA("BasePart")
+         end
+         if not model.PrimaryPart then return end
+
+         for _, v in ipairs(model:GetDescendants()) do
+            if v:IsA("Highlight") then v:Destroy() end
+         end
+
+         local hl = Instance.new("Highlight")
+         hl.Adornee = model
+         hl.FillTransparency = 0.2
+         hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+
+         if model:FindFirstChild("Torch", true) then
+            hl.FillColor = colors.Torch
+         elseif model:FindFirstChild("Axe", true) then
+            hl.FillColor = colors.Axe
+         else
+            hl.FillColor = colors.Default
+         end
+
+         hl.Parent = model
+      end
+
+      local function updateESP()
+         local char = player.Character
+         local root = char and char:FindFirstChild("HumanoidRootPart")
+         if not root then return end
+         for _, model in ipairs(cameraFolder:GetDescendants()) do
+            if model:IsA("Model") and model.Name == "m_Zombie" then
+               local dist = (root.Position - model.PrimaryPart.Position).Magnitude
+               if dist < 80 then
+                  highlightModel(model)
+               end
+            end
+         end
+      end
+
+      -- 🔁 Main loop
+      RunService.Heartbeat:Connect(function()
+         task.wait(waitDelay)
+         pcall(attack)
+         task.wait(waitDelay)
+         if highlightEnabled then
+            pcall(updateESP)
+         end
+      end)
+
+      game.StarterGui:SetCore("SendNotification", {
+         Title = "✅ Zac Kill Aura Active",
+         Text = "Auto-attack + ESP enabled",
+         Duration = 6
+      })
+
+   end,
+})
