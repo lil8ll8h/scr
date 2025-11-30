@@ -1,3 +1,75 @@
+     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Guts & Bluupowder",
+   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   LoadingTitle = "Guts & Bluupowder Hub",
+   LoadingSubtitle = "by luauisbluu",
+   ShowText = "G&B", -- for mobile users to unhide rayfield, change if you'd like
+   Theme = "Ocean", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+
+   ToggleUIKeybind = "B", -- The keybind to toggle the UI visibility (string like "K" or Enum.KeyCode)
+
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
+
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "Big Hub"
+   },
+
+   Discord = {
+      Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
+      Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
+      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+   },
+
+   KeySystem = false, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "Verification",
+      Subtitle = "No one of these hubs are mine",
+      Note = "Type (No) To verificate", -- Use this to tell the user how to get a key
+      FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {"No"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+   }
+})
+
+local MainTab = Window:CreateTab("Main", 4483362458) -- Title, Image
+
+local Main = Window:CreateTab("Others", 4483362458) -- Title, Image
+
+local Section = Main:CreateSection("Hubs")
+
+local Button = Main:CreateButton({
+   Name = "Chaos Hub V1 (Recomended)",
+   Callback = function()
+   loadstring(game:HttpGet("https://raw.githubusercontent.com/cjbbth1-crypto/Chaos-Hub-GB/refs/heads/main/Chaos%20Hub"))()
+   end,
+})
+
+local Button = Main:CreateButton({
+   Name = "Chaos Hub V2",
+   Callback = function()
+   loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/e20fed92529744b979e43c6bddcc0bb1ce5da193a3ce944ca92fedf1d7c23f2e/download"))() 
+
+   end,
+})
+
+local Button = Main:CreateButton({
+   Name = "Katchi Hub (KeySistem)",
+   Callback = function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/milkywiffle-netizen/Katchi-hub/refs/heads/main/KeysyGandB"))()
+  
+    end,
+})
+
+local Button = Main:CreateButton({
+   Name = "Zac Kill Aura & ESP",
+   Callback = function()
+
       local player = game:GetService("Players").LocalPlayer
       local RunService = game:GetService("RunService")
 
@@ -8,7 +80,7 @@
       _G.ZacCombatRunning = true
 
       -- ⚙ Settings
-      local LAG_LEVEL = 9.5     -- Higher = slower = less lag
+      local LAG_LEVEL = 0     -- Higher = slower = less lag
       local ATTACK_COOLDOWN = 1 -- seconds between attacks
       local ZOMBIE_TYPES = {"Agent", "Slim"}
       local currentMode = 2     -- 1: Stop | 2: Normal | 3: Clear Zombie
@@ -1216,3 +1288,23 @@ aimConn = RunService.RenderStepped:Connect(function(dt)
     -- apply new camera CFrame
     Camera.CFrame = newCFrame
 end)
+
+Rayfield:Notify({
+   Title = "Guts & Bluupowder",
+   Content = "Loaded sucefuly",
+   Duration = 3.1,
+   Image = 4483362458,
+})
+
+-- Optional cleanup function (call if you unload script)
+local function cleanupAimbot()
+    if aimConn then
+        aimConn:Disconnect()
+        aimConn = nil
+    end
+end
+
+-- Return cleanup if you want to expose it (not required)
+return {
+    cleanup = cleanupAimbot
+}
